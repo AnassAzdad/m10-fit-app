@@ -11,7 +11,6 @@ class QuotesScreen extends StatefulWidget {
 class _QuotesScreenState extends State<QuotesScreen> {
   final _random = Random();
 
-  // Lijst met quotes + auteur
   final List<_Quote> _quotes = const [
     _Quote(
       text: 'Kleine stappen, elke dag, zorgen voor grote veranderingen.',
@@ -42,7 +41,7 @@ class _QuotesScreenState extends State<QuotesScreen> {
   int _currentIndex = 0;
 
   void _nextQuote() {
-    if (_quotes.length == 1) return;
+    if (_quotes.length <= 1) return;
 
     int newIndex;
     do {
@@ -59,66 +58,96 @@ class _QuotesScreenState extends State<QuotesScreen> {
     final currentQuote = _quotes[_currentIndex];
 
     return Scaffold(
+      backgroundColor: const Color(0xFF050816),
       appBar: AppBar(
-        title: const Text('Quotes'),
-        centerTitle: true,
-      ),
-      body: Container(
-        // Mobile-first achtergrond: zacht en rustig
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFFE5E8FF),
-              Color(0xFFF7F8FF),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+        backgroundColor: const Color(0xFF050816),
+        elevation: 0,
+        title: const Text(
+          'Quotes',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        child: Center(
-          // SingleChildScrollView = veilig op kleinere schermen
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Max breedte zodat het op mobiel perfect is en op desktop niet te breed
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 500),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    transitionBuilder: (child, animation) {
-                      // Fade + lichte slide van onder naar boven
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.05),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      );
-                    },
-                    // key zorgt dat AnimatedSwitcher snapt dat het een nieuwe quote is
-                    child: Container(
-                      key: ValueKey(_currentIndex),
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(26),
-                        border: Border.all(
-                          color: Colors.grey.shade300,
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 16,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 5),
-                          ),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Boost je mindset',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Gebruik een quote als kleine mentale reset.',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Neon quote card met animatie
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 280),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.08),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    key: ValueKey(_currentIndex),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF6366F1),
+                          Color(0xFFEC4899),
                         ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFEC4899).withOpacity(0.45),
+                          blurRadius: 22,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: Container(
+                      margin: const EdgeInsets.all(1.8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 22,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(22),
+                        color: Colors.black.withOpacity(0.4),
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -126,47 +155,40 @@ class _QuotesScreenState extends State<QuotesScreen> {
                           Icon(
                             Icons.format_quote_rounded,
                             size: 32,
-                            color: const Color(0xFF4F46E5).withOpacity(0.7),
+                            color: Colors.white.withOpacity(0.85),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Quote van de dag',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 10),
                           Text(
                             '"${currentQuote.text}"',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
+                              color: Colors.white,
                               fontSize: 20,
                               fontStyle: FontStyle.italic,
                               fontWeight: FontWeight.w500,
+                              height: 1.4,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 14),
                           Align(
                             alignment: Alignment.centerRight,
                             child: Text(
                               '- ${currentQuote.author}',
                               style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade600,
+                                color: Colors.white70,
+                                fontSize: 13,
                                 fontStyle: FontStyle.italic,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
                           Align(
                             alignment: Alignment.centerRight,
                             child: Text(
                               'Quote ${_currentIndex + 1} van ${_quotes.length}',
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade500,
+                                color: Colors.white54,
+                                fontSize: 11,
                               ),
                             ),
                           ),
@@ -176,30 +198,54 @@ class _QuotesScreenState extends State<QuotesScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
-                // Knop ook mobile-first: max breedte, maar vult mooi op mobiel
+                // Button in neon stijl
                 ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 300),
+                  constraints: const BoxConstraints(maxWidth: 280),
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _nextQuote,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4F46E5),
-                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
                           vertical: 14,
                         ),
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(999),
                         ),
+                      ).copyWith(
+                        // Gradient button hack via MaterialStateProperty
+                        backgroundColor: MaterialStateProperty.resolveWith(
+                          (states) => Colors.transparent,
+                        ),
+                        elevation: MaterialStateProperty.all(0),
                       ),
-                      child: const Text(
-                        'Nieuwe quote',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
+                      child: Ink(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(999),
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF6366F1),
+                              Color(0xFF22C55E),
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                        ),
+                        child: Container(
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: const Text(
+                            'Nieuwe quote',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -214,7 +260,6 @@ class _QuotesScreenState extends State<QuotesScreen> {
   }
 }
 
-// Klein model voor een quote
 class _Quote {
   final String text;
   final String author;
