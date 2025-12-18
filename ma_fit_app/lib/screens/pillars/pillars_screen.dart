@@ -1,114 +1,134 @@
-class Pillar {
-  final String id;
-  final String title;
-  final String shortDescription;
-  final String longDescription;
-  final List<String> tips;
+import 'package:flutter/material.dart';
 
-  Pillar({
-    required this.id,
-    required this.title,
-    required this.shortDescription,
-    required this.longDescription,
-    required this.tips,
-  });
+import '../../core/app_state.dart';
+import '../../core/localization.dart';
+import '../../models/pillar.dart';
 
-  static List<Pillar> demoPillars = [
-    Pillar(
-      id: 'energy',
-      title: 'Energie',
-      shortDescription: 'Balans houden in je fysieke en mentale energie.',
-      longDescription:
-          'Een gezonde energiebalans helpt je om je studie en dagelijkse taken vol te houden. Denk aan beweging, voeding, pauzes en herstelmomenten.',
-      tips: [
-        'Neem korte beweegmomenten tussen lessen.',
-        'Drink voldoende water.',
-        'Plan regelmatig pauzes tijdens het studeren.',
+class PillarsScreen extends StatelessWidget {
+  PillarsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = AppState.language;
+    final pillars = Pillar.demoPillars;
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      children: [
+        Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF0C1120),
+                Color(0xFF090C18),
+              ],
+            ),
+            border: Border.all(
+              color: const Color(0xFF00F5FF).withOpacity(0.35),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF00F5FF).withOpacity(0.12),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Text(
+            L.t('pillars', lang),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        ...pillars.map((p) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF0C1120),
+                  Color(0xFF090C18),
+                ],
+              ),
+              border: Border.all(
+                color: const Color(0xFF00F5FF).withOpacity(0.35),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00F5FF).withOpacity(0.12),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  p.shortDescription,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.85),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  p.longDescription,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: p.tips
+                      .map(
+                        (t) => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(999),
+                            color: const Color(0xFF141A2E),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.10),
+                            ),
+                          ),
+                          child: Text(
+                            t,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ],
-    ),
-    Pillar(
-      id: 'emotions',
-      title: 'Emoties',
-      shortDescription: 'Leren omgaan met je gevoelens.',
-      longDescription:
-          'Emoties herkennen en benoemen is belangrijk voor je mentale gezondheid. Door er bewust mee om te gaan verminder je stress en spanning.',
-      tips: [
-        'Schrijf dagelijks op hoe je je voelt.',
-        'Praat met iemand die je vertrouwt.',
-        'Laat emoties toe zonder oordeel.',
-      ],
-    ),
-    Pillar(
-      id: 'focus',
-      title: 'Focus',
-      shortDescription: 'Concentratie en aandacht verbeteren.',
-      longDescription:
-          'Goede focus helpt je productiever te zijn. Door afleiding te verminderen en structuur te creëren kun je beter presteren.',
-      tips: [
-        'Werk in blokken van 25 minuten (Pomodoro).',
-        'Zet je telefoon op niet storen.',
-        'Werk in een rustige, opgeruimde ruimte.',
-      ],
-    ),
-    Pillar(
-      id: 'stress',
-      title: 'Stress',
-      shortDescription: 'Omgaan met druk en spanning.',
-      longDescription:
-          'Stress is normaal, maar te veel stress kan klachten veroorzaken. Door bewust ademhalen, rust nemen en overzicht te bewaren blijft stress beheersbaar.',
-      tips: [
-        'Doe elke dag 5 minuten ademhalingsoefeningen.',
-        'Maak een to-do lijst voor overzicht.',
-        'Plan tijd in voor ontspanning.',
-      ],
-    ),
-    Pillar(
-      id: 'sleep',
-      title: 'Slaap',
-      shortDescription: 'Een gezond slaapritme opbouwen.',
-      longDescription:
-          'Slaap is essentieel voor herstel, concentratie en humeur. Een vast ritme helpt je lichaam om beter te functioneren.',
-      tips: [
-        'Ga elke dag rond dezelfde tijd naar bed.',
-        'Vermijd schermen een uur voor het slapen.',
-        'Zorg dat je kamer donker en koel is.',
-      ],
-    ),
-    Pillar(
-      id: 'social',
-      title: 'Sociale Verbinding',
-      shortDescription: 'Verbinding met mensen om je heen.',
-      longDescription:
-          'Sociale contacten helpen bij motivatie, zelfvertrouwen en welzijn. Praten met anderen vermindert stress en geeft energie.',
-      tips: [
-        'Plan wekelijks iets met een vriend of klasgenoot.',
-        'Zoek steun als je ergens mee zit.',
-        'Deel successen en uitdagingen met anderen.',
-      ],
-    ),
-    Pillar(
-      id: 'planning',
-      title: 'Planning & Studie',
-      shortDescription: 'Structuur aanbrengen in je schoolwerk.',
-      longDescription:
-          'Een goede planning helpt om deadlines te halen en rust te bewaren. Het geeft overzicht en voorkomt stress.',
-      tips: [
-        'Maak aan het begin van de week een planning.',
-        'Werk met deadlines per taak.',
-        'Begin met kleine stappen om motivatie op te bouwen.',
-      ],
-    ),
-    Pillar(
-      id: 'confidence',
-      title: 'Zelfvertrouwen',
-      shortDescription: 'Groeien in je eigen kracht.',
-      longDescription:
-          'Zelfvertrouwen bouw je op door kleine doelen te halen, positief naar jezelf te kijken en trots te zijn op vooruitgang.',
-      tips: [
-        'Schrijf elke dag iets op dat goed ging.',
-        'Vergelijk jezelf niet met anderen.',
-        'Vier kleine en grote successen.',
-      ],
-    ),
-  ];
+    );
+  }
 }

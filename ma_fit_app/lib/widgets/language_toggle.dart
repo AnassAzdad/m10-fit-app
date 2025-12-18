@@ -3,52 +3,27 @@ import 'package:flutter/material.dart';
 import '../core/app_state.dart';
 import '../core/localization.dart';
 
-class LanguageToggle extends StatefulWidget {
-  final VoidCallback? onChanged;
+class LanguageToggle extends StatelessWidget {
+  final VoidCallback onChanged;
 
-  const LanguageToggle({super.key, this.onChanged});
+  const LanguageToggle({super.key, required this.onChanged});
 
-  @override
-  State<LanguageToggle> createState() => _LanguageToggleState();
-}
-
-class _LanguageToggleState extends State<LanguageToggle> {
   @override
   Widget build(BuildContext context) {
-    final isNl = AppState.language == AppLanguage.nl;
+    final isEn = AppState.language == AppLanguage.en;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TextButton(
-          onPressed: () {
-            setState(() {
-              AppState.language = AppLanguage.nl;
-            });
-            widget.onChanged?.call();
-          },
-          child: Text(
-            'NL',
-            style: TextStyle(
-              fontWeight: isNl ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
+    return IconButton(
+      onPressed: () {
+        AppState.language = isEn ? AppLanguage.nl : AppLanguage.en;
+        onChanged();
+      },
+      icon: Text(
+        isEn ? 'EN' : 'NL',
+        style: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
         ),
-        TextButton(
-          onPressed: () {
-            setState(() {
-              AppState.language = AppLanguage.en;
-            });
-            widget.onChanged?.call();
-          },
-          child: Text(
-            'EN',
-            style: TextStyle(
-              fontWeight: !isNl ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

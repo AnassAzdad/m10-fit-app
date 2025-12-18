@@ -3,13 +3,10 @@ import 'package:flutter/material.dart';
 import '../../core/app_state.dart';
 import '../../core/localization.dart';
 import '../../widgets/language_toggle.dart';
-import '../../widgets/primary_card.dart';
 import '../pillars/pillars_screen.dart';
 import '../checkin/checkin_screen.dart';
 import '../notes/notes_screen.dart';
 import '../help/help_screen.dart';
-import '../challenges/challenges_screen.dart';
-import '../quotes/quotes_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,222 +22,201 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final lang = AppState.language;
 
-    final pages = [
-      OverviewTab(onNavigate: _navigateTo),
-      const PillarsScreen(),
-      const CheckInScreen(),
-      const NotesScreen(),
-      const HelpScreen(),
-    ];
+   final pages = [
+  const OverviewTab(),
+  PillarsScreen(key: ValueKey(AppState.language)),
+  CheckInScreen(key: ValueKey(AppState.language)),
+  NotesScreen(key: ValueKey(AppState.language)),
+  HelpScreen(key: ValueKey(AppState.language)),
+];
+
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(L.t('app_title', lang)),
-        backgroundColor: Colors.transparent,
-        actions: [
-          LanguageToggle(
-            onChanged: () {
-              setState(() {});
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              AppState.logoutUser();
-              Navigator.pushReplacementNamed(context, '/login');
-            },
-          ),
-        ],
-      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF050816),
-              Color(0xFF09041A),
-            ],
+            colors: [Color(0xFF050816), Color(0xFF09041A)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
         child: SafeArea(
-          child: pages[index],
+          child: Center(
+            child: _PhoneFrame(
+              child: Scaffold(
+                backgroundColor: Colors.transparent,
+                appBar: AppBar(
+                  title: Text(L.t('app_title', lang)),
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  actions: [
+                    LanguageToggle(
+                      onChanged: () => setState(() {}),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.logout),
+                      onPressed: () {
+                        AppState.logoutUser();
+                        Navigator.pushReplacementNamed(context, '/login');
+                      },
+                    ),
+                  ],
+                ),
+                body: pages[index],
+                bottomNavigationBar: BottomNavigationBar(
+                  currentIndex: index,
+                  onTap: (i) => setState(() => index = i),
+                  type: BottomNavigationBarType.fixed,
+                  items: [
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.home),
+                      label: L.t('home', lang),
+                    ),
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.grid_view),
+                      label: L.t('pillars', lang),
+                    ),
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.favorite),
+                      label: L.t('checkin', lang),
+                    ),
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.edit),
+                      label: L.t('notes', lang),
+                    ),
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.help_outline),
+                      label: L.t('help', lang),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: index,
-        onTap: (i) {
-          setState(() => index = i);
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.home),
-            label: L.t('home_tab_overview', lang),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.grid_view),
-            label: L.t('home_tab_pillars', lang),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.favorite),
-            label: L.t('home_tab_checkin', lang),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.edit),
-            label: L.t('home_tab_notes', lang),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.help_outline),
-            label: L.t('home_tab_more', lang),
-          ),
-        ],
       ),
     );
   }
+}
 
-  void _navigateTo(String target) {
-    if (target == 'pillars') index = 1;
-    else if (target == 'checkin') index = 2;
-    else if (target == 'notes') index = 3;
-    else if (target == 'help') index = 4;
-    else if (target == 'challenges') {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const ChallengesScreen()));
-      return;
-    } else if (target == 'quotes') {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const QuotesScreen()));
-      return;
-    }
+class _PhoneFrame extends StatelessWidget {
+  final Widget child;
+  const _PhoneFrame({required this.child});
 
-    setState(() {});
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        maxWidth: 420,
+        maxHeight: 900,
+      ),
+      child: AspectRatio(
+        aspectRatio: 9 / 19.5,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: Colors.white.withOpacity(0.12), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.55),
+                blurRadius: 28,
+                offset: const Offset(0, 18),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(26),
+            child: child,
+          ),
+        ),
+      ),
+    );
   }
 }
 
 class OverviewTab extends StatelessWidget {
-  final void Function(String target) onNavigate;
-
-  const OverviewTab({required this.onNavigate});
+  const OverviewTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final user = AppState.currentUser;
     final lang = AppState.language;
+    final user = AppState.currentUser;
+    final name = user?.name ?? L.t('student', lang);
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       children: [
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
             gradient: const LinearGradient(
-              colors: [
-                Color(0xFF0F1535),
-                Color(0xFF080A1A),
-              ],
+              colors: [Color(0xFF0F1535), Color(0xFF080A1A)],
             ),
             border: Border.all(
-              color: const Color(0xFF00F5FF).withOpacity(0.35),
-              width: 1.2,
+              color: const Color(0xFF00F5FF).withOpacity(0.4),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF00F5FF).withOpacity(0.25),
-                blurRadius: 25,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
-          margin: const EdgeInsets.only(bottom: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Welkom terug, ${user?.name ?? 'Student'} 👋",
+                '${L.t('welcome', lang)}, $name 👋',
                 style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
                   color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 6),
-              if (user != null)
-                Text(
-                  '${user.opleiding} · ${user.klas}',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 13,
-                  ),
-                ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
-                "Fijn dat je er weer bent.\nHoe voel je je vandaag?",
+                L.t('how_feel', lang),
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "Je staat er niet alleen voor. MA Fit helpt je elke dag een beetje verder.",
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.65),
-                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.85),
+                  fontSize: 14,
                 ),
               ),
             ],
           ),
         ),
-        Text(
-          "Jouw tools",
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.white,
-              ),
-        ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 20),
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 0.95,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1,
           children: [
-            FeatureTile(
-              icon: Icons.grid_view_rounded,
-              label: 'Pijlers',
+            _HomeTile(
+              icon: Icons.grid_view,
+              label: L.t('pillars', lang),
               color: const Color(0xFF00F5FF),
-              onTap: () => onNavigate('pillars'),
             ),
-            FeatureTile(
-              icon: Icons.favorite_border,
-              label: 'Check-in',
+            _HomeTile(
+              icon: Icons.favorite,
+              label: L.t('checkin', lang),
               color: const Color(0xFFFF4B91),
-              onTap: () => onNavigate('checkin'),
             ),
-            FeatureTile(
-              icon: Icons.edit_note_outlined,
-              label: 'Notities',
+            _HomeTile(
+              icon: Icons.edit,
+              label: L.t('notes', lang),
               color: const Color(0xFF9B5CFF),
-              onTap: () => onNavigate('notes'),
             ),
-            FeatureTile(
-              icon: Icons.flag_outlined,
-              label: 'Challenges',
+            _HomeTile(
+              icon: Icons.flag,
+              label: L.t('challenges', lang),
               color: const Color(0xFFFFD166),
-              onTap: () => onNavigate('challenges'),
             ),
-            FeatureTile(
+            _HomeTile(
               icon: Icons.format_quote,
-              label: 'Quotes',
+              label: L.t('quotes', lang),
               color: const Color(0xFF6EEB83),
-              onTap: () => onNavigate('quotes'),
             ),
-            FeatureTile(
+            _HomeTile(
               icon: Icons.help_outline,
-              label: 'Hulp',
+              label: L.t('help', lang),
               color: const Color(0xFF00C2FF),
-              onTap: () => onNavigate('help'),
             ),
           ],
         ),
@@ -249,69 +225,40 @@ class OverviewTab extends StatelessWidget {
   }
 }
 
-class FeatureTile extends StatelessWidget {
+class _HomeTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  final VoidCallback onTap;
 
-  const FeatureTile({
+  const _HomeTile({
     required this.icon,
     required this.label,
     required this.color,
-    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFF0C1120),
-              Color(0xFF090C18),
-            ],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: const Color(0xFF0C1120),
+        border: Border.all(color: color.withOpacity(0.6)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 30),
+          const SizedBox(height: 10),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+            ),
           ),
-          border: Border.all(
-            color: color.withOpacity(0.7),
-            width: 1.1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.4),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 26),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Open ${label.toLowerCase()}',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
