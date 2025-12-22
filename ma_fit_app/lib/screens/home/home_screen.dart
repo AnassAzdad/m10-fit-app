@@ -7,6 +7,8 @@ import '../pillars/pillars_screen.dart';
 import '../checkin/checkin_screen.dart';
 import '../notes/notes_screen.dart';
 import '../help/help_screen.dart';
+import '../challenges/challenges_screen.dart';
+import '../quotes/quotes_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,14 +24,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final lang = AppState.language;
 
-   final pages = [
-  const OverviewTab(),
-  PillarsScreen(key: ValueKey(AppState.language)),
-  CheckInScreen(key: ValueKey(AppState.language)),
-  NotesScreen(key: ValueKey(AppState.language)),
-  HelpScreen(key: ValueKey(AppState.language)),
-];
-
+    final pages = [
+      OverviewTab(
+        onNavigateTab: (tabIndex) => setState(() => index = tabIndex),
+        onOpenChallenges: () => _openChallenges(context),
+        onOpenQuotes: () => _openQuotes(context),
+      ),
+      PillarsScreen(key: ValueKey(AppState.language)),
+      CheckInScreen(key: ValueKey(AppState.language)),
+      NotesScreen(key: ValueKey(AppState.language)),
+      HelpScreen(key: ValueKey(AppState.language)),
+    ];
 
     return Scaffold(
       body: Container(
@@ -97,6 +102,20 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  void _openChallenges(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ChallengesScreen()),
+    );
+  }
+
+  void _openQuotes(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const QuotesScreen()),
+    );
+  }
 }
 
 class _PhoneFrame extends StatelessWidget {
@@ -135,7 +154,16 @@ class _PhoneFrame extends StatelessWidget {
 }
 
 class OverviewTab extends StatelessWidget {
-  const OverviewTab({super.key});
+  final void Function(int tabIndex) onNavigateTab;
+  final VoidCallback onOpenChallenges;
+  final VoidCallback onOpenQuotes;
+
+  const OverviewTab({
+    super.key,
+    required this.onNavigateTab,
+    required this.onOpenChallenges,
+    required this.onOpenQuotes,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -192,31 +220,37 @@ class OverviewTab extends StatelessWidget {
               icon: Icons.grid_view,
               label: L.t('pillars', lang),
               color: const Color(0xFF00F5FF),
+              onTap: () => onNavigateTab(1),
             ),
             _HomeTile(
               icon: Icons.favorite,
               label: L.t('checkin', lang),
               color: const Color(0xFFFF4B91),
+              onTap: () => onNavigateTab(2),
             ),
             _HomeTile(
               icon: Icons.edit,
               label: L.t('notes', lang),
               color: const Color(0xFF9B5CFF),
+              onTap: () => onNavigateTab(3),
             ),
             _HomeTile(
               icon: Icons.flag,
               label: L.t('challenges', lang),
               color: const Color(0xFFFFD166),
+              onTap: onOpenChallenges,
             ),
             _HomeTile(
               icon: Icons.format_quote,
               label: L.t('quotes', lang),
               color: const Color(0xFF6EEB83),
+              onTap: onOpenQuotes,
             ),
             _HomeTile(
               icon: Icons.help_outline,
               label: L.t('help', lang),
               color: const Color(0xFF00C2FF),
+              onTap: () => onNavigateTab(4),
             ),
           ],
         ),
@@ -229,36 +263,45 @@ class _HomeTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
+  final VoidCallback onTap;
 
   const _HomeTile({
     required this.icon,
     required this.label,
     required this.color,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        color: const Color(0xFF0C1120),
-        border: Border.all(color: color.withOpacity(0.6)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 30),
-          const SizedBox(height: 10),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-            ),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            color: const Color(0xFF0C1120),
+            border: Border.all(color: color.withOpacity(0.6)),
           ),
-        ],
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 30),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
