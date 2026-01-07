@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/auth_service.dart';
 
 import '../../core/app_state.dart';
 import '../../core/localization.dart';
@@ -55,13 +56,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   backgroundColor: Colors.transparent,
                   elevation: 0,
                   actions: [
-                    LanguageToggle(
-                      onChanged: () => setState(() {}),
-                    ),
+                    LanguageToggle(onChanged: () => setState(() {})),
                     IconButton(
                       icon: const Icon(Icons.logout),
-                      onPressed: () {
+                      onPressed: () async {
+                        await AuthService.logout();
                         AppState.logoutUser();
+                        if (!context.mounted) return;
                         Navigator.pushReplacementNamed(context, '/login');
                       },
                     ),
@@ -125,10 +126,7 @@ class _PhoneFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(
-        maxWidth: 420,
-        maxHeight: 900,
-      ),
+      constraints: const BoxConstraints(maxWidth: 420, maxHeight: 900),
       child: AspectRatio(
         aspectRatio: 9 / 19.5,
         child: Container(
@@ -181,9 +179,7 @@ class OverviewTab extends StatelessWidget {
             gradient: const LinearGradient(
               colors: [Color(0xFF0F1535), Color(0xFF080A1A)],
             ),
-            border: Border.all(
-              color: const Color(0xFF00F5FF).withOpacity(0.4),
-            ),
+            border: Border.all(color: const Color(0xFF00F5FF).withOpacity(0.4)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
