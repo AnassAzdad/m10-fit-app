@@ -3,23 +3,35 @@ import '../models/pillar.dart';
 import '../models/challenge.dart';
 import '../models/quote.dart';
 import '../models/checkin.dart';
-import '../models/note.dart';
 import 'localization.dart';
 
 class AppState {
   static AppLanguage language = AppLanguage.nl;
+
+  /// 🔐 Ingelogde Supabase gebruiker
   static User? currentUser;
 
+  /// Demo / vaste data
   static List<Pillar> pillars = Pillar.demoPillars;
   static List<Challenge> challenges = Challenge.demoChallenges;
   static List<AppQuote> quotes = AppQuote.demoQuotes;
 
+  /// Check-ins (kan later ook Supabase worden)
   static List<CheckIn> checkIns = [];
-  static List<Note> notes = [];
 
-  static void loginUser(String name, String opleiding, String klas) {
+  /* =========================
+     AUTH / USER STATE
+  ========================== */
+
+  /// Wordt aangeroepen NA login/register via Supabase
+  static void setUserFromSupabase({
+    required String id,
+    required String name,
+    required String opleiding,
+    required String klas,
+  }) {
     currentUser = User(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: id, // ⚠️ dit is auth.uid()
       name: name.trim().isEmpty ? 'Student' : name.trim(),
       opleiding: opleiding.trim(),
       klas: klas.trim(),
@@ -28,15 +40,19 @@ class AppState {
 
   static void logoutUser() {
     currentUser = null;
-    checkIns = [];
-    notes = [];
+    checkIns.clear();
   }
+
+  /* =========================
+     CHECK-INS (prototype / service)
+  ========================== */
 
   static void addCheckIn(int mood, String noteText) {
     if (currentUser == null) return;
 
     checkIns.add(
       CheckIn(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
         userId: currentUser!.id,
         opleiding: currentUser!.opleiding,
         klas: currentUser!.klas,
@@ -47,36 +63,19 @@ class AppState {
     );
   }
 
-  static void addNote(String text) {
-    if (currentUser == null) return;
-
-    final t = text.trim();
-    if (t.isEmpty) return;
-
-    notes.add(
-      Note(
-        userId: currentUser!.id,
-        date: DateTime.now(),
-        text: t,
-      ),
-    );
-  }
-
   static List<CheckIn> getMyCheckIns() {
     if (currentUser == null) return [];
     return checkIns.where((c) => c.userId == currentUser!.id).toList();
-  }
-
-  static List<Note> getMyNotes() {
-    if (currentUser == null) return [];
-    return notes.where((n) => n.userId == currentUser!.id).toList();
   }
 
   static int getTodayCountForClass(String opleiding, String klas) {
     final now = DateTime.now();
     return checkIns.where((c) {
       final sameClass = c.opleiding == opleiding && c.klas == klas;
-      final sameDay = c.date.year == now.year && c.date.month == now.month && c.date.day == now.day;
+      final sameDay =
+          c.date.year == now.year &&
+          c.date.month == now.month &&
+          c.date.day == now.day;
       return sameClass && sameDay;
     }).length;
   }
@@ -85,7 +84,10 @@ class AppState {
     final now = DateTime.now();
     final items = checkIns.where((c) {
       final sameClass = c.opleiding == opleiding && c.klas == klas;
-      final sameDay = c.date.year == now.year && c.date.month == now.month && c.date.day == now.day;
+      final sameDay =
+          c.date.year == now.year &&
+          c.date.month == now.month &&
+          c.date.day == now.day;
       return sameClass && sameDay;
     }).toList();
 

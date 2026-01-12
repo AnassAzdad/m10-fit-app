@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_state.dart';
 import '../../core/auth_service.dart';
-bool rememberMe = true;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,19 +15,60 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
 
   final nameController = TextEditingController();
-  final opleidingController = TextEditingController();
   final klasController = TextEditingController();
 
   bool isRegister = false;
   bool loading = false;
   String? errorText;
 
+  String? selectedOpleiding;
+
+  bool rememberMe = true;
+
+  final List<String> opleidingenMA = const [
+    'Immersive designer',
+    'Podium- en evenemententechnicus',
+    'Medewerker creatieve productie',
+    'Allround mediamaker (dtp-er)',
+    'Signspecialist',
+    'Mediaredactiemedewerker',
+    'Media- en eventproducer & Music industry professional',
+    'Ruimtelijk vormgever',
+    'Mediavormgever',
+    'E-commerce designer',
+    'Audiovisueel',
+    'Photographic designer',
+    'Game artist',
+    'Creative software developer',
+    'Tech software developer',
+    'Filmacteur',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRemember();
+  }
+
+  Future<void> _loadRemember() async {
+    final r = await AuthService.getRememberMe();
+    final email = await AuthService.getRememberedEmail();
+
+    if (!mounted) return;
+
+    setState(() {
+      rememberMe = r;
+      if (email != null && email.trim().isNotEmpty) {
+        emailController.text = email.trim();
+      }
+    });
+  }
+
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
     nameController.dispose();
-    opleidingController.dispose();
     klasController.dispose();
     super.dispose();
   }
@@ -39,10 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF050816),
-              Color(0xFF09041A),
-            ],
+            colors: [Color(0xFF050816), Color(0xFF09041A)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -57,10 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
                   gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF0F1535),
-                      Color(0xFF080A1A),
-                    ],
+                    colors: [Color(0xFF0F1535), Color(0xFF080A1A)],
                   ),
                   border: Border.all(
                     color: const Color(0xFF00F5FF).withOpacity(0.42),
@@ -104,10 +138,34 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: _input('Naam'),
                       ),
                       const SizedBox(height: 12),
-                      TextField(
-                        controller: opleidingController,
+                      DropdownButtonFormField<String>(
+                        value: selectedOpleiding,
+                        isExpanded: true,
+                        dropdownColor: const Color(0xFF141A2E),
+                        icon: const Icon(Icons.arrow_drop_down),
+                        iconEnabledColor: Colors.white.withOpacity(0.9),
                         style: const TextStyle(color: Colors.white),
                         decoration: _input('Opleiding'),
+                        hint: Text(
+                          'Kies opleiding',
+                          style: TextStyle(color: Colors.white.withOpacity(0.55)),
+                        ),
+                        items: opleidingenMA
+                            .map(
+                              (o) => DropdownMenuItem<String>(
+                                value: o,
+                                child: Text(
+                                  o,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() => selectedOpleiding = value);
+                        },
+                        menuMaxHeight: 320,
                       ),
                       const SizedBox(height: 12),
                       TextField(
@@ -132,8 +190,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: true,
                     ),
 
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: rememberMe,
+                          activeColor: const Color(0xFF00F5FF),
+                          checkColor: Colors.black,
+                          onChanged: (v) {
+                            setState(() => rememberMe = v ?? true);
+                          },
+                        ),
+                        Text(
+                          'Onthoud account',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.85),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+
                     if (errorText != null) ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Text(
                         errorText!,
                         textAlign: TextAlign.center,
@@ -144,7 +224,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
 
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 14),
+
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF00F5FF),
@@ -195,23 +276,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 2),
                       Center(
                         child: TextButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                title: const Text('Wachtwoord vergeten'),
-                                content: const Text(
-                                  'Dit is een prototype. Neem contact op met je mentor of de administratie om je account te herstellen.',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Oké'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                          onPressed: _forgotPassword,
                           child: Text(
                             'Wachtwoord vergeten?',
                             style: TextStyle(
@@ -233,6 +298,34 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _forgotPassword() async {
+    final email = emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() => errorText = 'Vul eerst je e-mail in.');
+      return;
+    }
+
+    setState(() {
+      loading = true;
+      errorText = null;
+    });
+
+    final err = await AuthService.sendPasswordReset(email);
+
+    if (!mounted) return;
+
+    setState(() => loading = false);
+
+    if (err != null) {
+      setState(() => errorText = _mapError(err));
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Reset link is verstuurd naar je e-mail ✅')),
+    );
+  }
+
   Future<void> _submit() async {
     final email = emailController.text.trim();
     final pass = passwordController.text;
@@ -242,6 +335,36 @@ class _LoginScreenState extends State<LoginScreen> {
       errorText = null;
     });
 
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() {
+        loading = false;
+        errorText = 'Vul een geldige e-mail in.';
+      });
+      return;
+    }
+
+    if (pass.isEmpty || pass.length < 4) {
+      setState(() {
+        loading = false;
+        errorText = 'Wachtwoord is te kort (minimaal 4).';
+      });
+      return;
+    }
+
+    if (isRegister) {
+      final name = nameController.text.trim();
+      final klas = klasController.text.trim();
+      final opleiding = (selectedOpleiding ?? '').trim();
+
+      if (name.isEmpty || klas.isEmpty || opleiding.isEmpty) {
+        setState(() {
+          loading = false;
+          errorText = 'Vul alles in en kies een opleiding.';
+        });
+        return;
+      }
+    }
+
     String? err;
 
     if (isRegister) {
@@ -249,7 +372,7 @@ class _LoginScreenState extends State<LoginScreen> {
         email: email,
         password: pass,
         name: nameController.text.trim(),
-        opleiding: opleidingController.text.trim(),
+        opleiding: (selectedOpleiding ?? '').trim(),
         klas: klasController.text.trim(),
       );
     } else {
@@ -259,17 +382,29 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (err != null) {
+  setState(() {
+    loading = false;
+    errorText = err;
+  });
+  return;
+}
+
+
+    await AuthService.setRememberMe(remember: rememberMe, email: email);
+
+    final user = await AuthService.getSessionUser();
+
+    if (!mounted) return;
+
+    if (user == null) {
       setState(() {
         loading = false;
-        errorText = _mapError(err!);
+        errorText = 'Geen sessie gevonden. Probeer opnieuw.';
       });
       return;
     }
 
-    final user = await AuthService.getSessionUser();
     AppState.currentUser = user;
-
-    if (!mounted) return;
 
     setState(() => loading = false);
     Navigator.pushReplacementNamed(context, '/home');
@@ -281,6 +416,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (key == 'email_exists') return 'Deze e-mail bestaat al.';
     if (key == 'not_found') return 'Account niet gevonden. Maak eerst een account.';
     if (key == 'wrong_password') return 'Wachtwoord klopt niet.';
+    if (key == 'not_logged_in') return 'Niet ingelogd. Probeer opnieuw.';
     return 'Er ging iets mis.';
   }
 

@@ -23,16 +23,21 @@ class _QuotesScreenState extends State<QuotesScreen> {
     final lang = AppState.language;
     final List<AppQuote> quotes = AppState.quotes;
 
-    final filteredQuotes = quotes.where((q) {
+    // ✅ ECHT filteren
+    final List<AppQuote> filteredQuotes = quotes.where((q) {
       if (filter == 'all') return true;
-      final txt = (q.text + ' ' + q.author).toLowerCase();
-      if (filter == 'study') return txt.contains('study') || txt.contains('school') || txt.contains('leren');
-      if (filter == 'mind') return txt.contains('mind') || txt.contains('stress') || txt.contains('rust') || txt.contains('calm');
-      if (filter == 'confidence') return txt.contains('confidence') || txt.contains('trots') || txt.contains('self');
-      return true;
+      return q.category == filter;
     }).toList();
 
-    final quoteOfDay = quotes.isNotEmpty ? quotes[DateTime.now().day % quotes.length] : null;
+    final quoteOfDay = filteredQuotes.isNotEmpty
+        ? filteredQuotes[DateTime.now().day % filteredQuotes.length]
+        : null;
+
+    // 🔤 Titel
+    String pageTitle = 'Quotes';
+    if (filter == 'study') pageTitle = 'Studie quotes';
+    if (filter == 'mind') pageTitle = 'Mindset quotes';
+    if (filter == 'confidence') pageTitle = 'Zelfvertrouwen quotes';
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -49,96 +54,142 @@ class _QuotesScreenState extends State<QuotesScreen> {
             child: Scaffold(
               backgroundColor: Colors.transparent,
               appBar: AppBar(
-                title: Text(L.t('quotes_title', lang)),
                 backgroundColor: Colors.transparent,
                 elevation: 0,
+                title: Text(
+                  pageTitle,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               ),
               body: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
                 children: [
-                  _HeaderCard(
-                    title: L.t('quotes_title', lang),
-                    subtitle: lang == AppLanguage.en
-                        ? 'Short boosts for focus and mindset.'
-                        : 'Korte boosts voor focus en mindset.',
-                    rightText: '${quotes.length}',
-                    rightLabel: lang == AppLanguage.en ? 'quotes' : 'quotes',
-                  ),
-                  const SizedBox(height: 12),
-                  _FilterRow(
-                    current: filter,
-                    onSelect: (v) => setState(() => filter = v),
-                    labels: {
-                      'all': lang == AppLanguage.en ? 'All' : 'Alle',
-                      'study': lang == AppLanguage.en ? 'Study' : 'Studie',
-                      'mind': lang == AppLanguage.en ? 'Mind' : 'Mindset',
-                      'confidence': lang == AppLanguage.en ? 'Confidence' : 'Zelfvertrouwen',
-                    },
-                  ),
-                  const SizedBox(height: 12),
+                  // 🌟 Quote van de dag
                   if (quoteOfDay != null) ...[
-                    _SectionTitle(
-                      text: lang == AppLanguage.en ? 'Quote of the day' : 'Quote van de dag',
-                    ),
-                    const SizedBox(height: 8),
-                    PrimaryCard(
-                      child: _QuoteCardBody(
-                        text: quoteOfDay.text,
-                        author: quoteOfDay.author,
-                        accent: const Color(0xFF6EEB83),
-                        onCopy: () => _copy(context, '"${quoteOfDay.text}" — ${quoteOfDay.author}'),
+                    Text(
+                      lang == AppLanguage.en
+                          ? 'Quote of the day'
+                          : 'Quote van de dag',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.85),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
+                    PrimaryCard(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFF6EEB83).withOpacity(0.6),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: QuoteCardBody(
+                          text: quoteOfDay.text,
+                          author: quoteOfDay.author,
+                          accent: const Color(0xFF6EEB83),
+                          onCopy: () => _copy(
+                            context,
+                            '"${quoteOfDay.text}" — ${quoteOfDay.author}',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
                   ],
-                  _SectionTitle(
-                    text: lang == AppLanguage.en ? 'All quotes' : 'Alle quotes',
+
+                  // 🎯 Filters
+                  FilterRow(
+                    current: filter,
+                    onSelect: (v) => setState(() => filter = v),
                   ),
-                  const SizedBox(height: 8),
-                  ...List.generate(filteredQuotes.length, (index) {
-                    final q = filteredQuotes[index];
+
+                  const SizedBox(height: 18),
+
+                  Text(
+                    lang == AppLanguage.en ? 'All quotes' : 'Alle quotes',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  if (filteredQuotes.isEmpty)
+                    Text(
+                      lang == AppLanguage.en
+                          ? 'No quotes in this category.'
+                          : 'Geen quotes in deze categorie.',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 13,
+                      ),
+                    ),
+
+                  ...filteredQuotes.map((q) {
                     final originalIndex = quotes.indexOf(q);
                     final isFav = favorites.contains(originalIndex);
 
-                    return PrimaryCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _QuoteCardBody(
-                            text: q.text,
-                            author: q.author,
-                            accent: const Color(0xFF00F5FF),
-                            onCopy: () => _copy(context, '"${q.text}" — ${q.author}'),
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              _MiniAction(
-                                icon: Icons.copy,
-                                label: lang == AppLanguage.en ? 'Copy' : 'Kopieer',
-                                onTap: () => _copy(context, '"${q.text}" — ${q.author}'),
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: PrimaryCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            QuoteCardBody(
+                              text: q.text,
+                              author: q.author,
+                              accent: const Color(0xFF00F5FF),
+                              onCopy: () => _copy(
+                                context,
+                                '"${q.text}" — ${q.author}',
                               ),
-                              const SizedBox(width: 10),
-                              _MiniAction(
-                                icon: isFav ? Icons.favorite : Icons.favorite_border,
-                                label: lang == AppLanguage.en ? 'Save' : 'Opslaan',
-                                onTap: () {
-                                  setState(() {
-                                    if (isFav) {
-                                      favorites.remove(originalIndex);
-                                    } else {
-                                      favorites.add(originalIndex);
-                                    }
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                MiniAction(
+                                  icon: Icons.copy,
+                                  label: lang == AppLanguage.en
+                                      ? 'Copy'
+                                      : 'Kopieer',
+                                  onTap: () => _copy(
+                                    context,
+                                    '"${q.text}" — ${q.author}',
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                MiniAction(
+                                  icon: isFav
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  label: lang == AppLanguage.en
+                                      ? 'Save'
+                                      : 'Opslaan',
+                                  onTap: () {
+                                    setState(() {
+                                      if (isFav) {
+                                        favorites.remove(originalIndex);
+                                      } else {
+                                        favorites.add(originalIndex);
+                                      }
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     );
-                  }),
-                  const SizedBox(height: 10),
+                  }).toList(),
                 ],
               ),
             ),
@@ -152,129 +203,126 @@ class _QuotesScreenState extends State<QuotesScreen> {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(AppState.language == AppLanguage.en ? 'Copied!' : 'Gekopieerd!'),
+        content: Text(
+          AppState.language == AppLanguage.en ? 'Copied!' : 'Gekopieerd!',
+        ),
         duration: const Duration(milliseconds: 900),
       ),
     );
   }
 }
 
-class _HeaderCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String rightText;
-  final String rightLabel;
+/* =======================
+   FILTER ROW
+======================= */
 
-  const _HeaderCard({
-    required this.title,
-    required this.subtitle,
-    required this.rightText,
-    required this.rightLabel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F1535), Color(0xFF080A1A)],
-        ),
-        border: Border.all(color: const Color(0xFF00F5FF).withOpacity(0.25)),
-      ),
-      child: Row(
-        children: [
-          const _NeonIconCircle(icon: Icons.format_quote, glow: Color(0xFF6EEB83)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 4),
-                Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.75), fontSize: 12)),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              color: const Color(0xFF141A2E),
-              border: Border.all(color: Colors.white.withOpacity(0.10)),
-            ),
-            child: Column(
-              children: [
-                Text(rightText,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16)),
-                Text(rightLabel, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterRow extends StatelessWidget {
+class FilterRow extends StatelessWidget {
   final String current;
   final void Function(String) onSelect;
-  final Map<String, String> labels;
 
-  const _FilterRow({
+  const FilterRow({
+    super.key,
     required this.current,
     required this.onSelect,
-    required this.labels,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: labels.entries.map((e) {
-          final selected = e.key == current;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(e.value),
-              selected: selected,
-              onSelected: (_) => onSelect(e.key),
-            ),
-          );
-        }).toList(),
-      ),
+    return Row(
+      children: [
+        FilterChipItem(
+          label: 'Alle',
+          selected: current == 'all',
+          color: Colors.white,
+          onTap: () => onSelect('all'),
+        ),
+        const SizedBox(width: 8),
+        FilterChipItem(
+          label: 'Studie',
+          selected: current == 'study',
+          color: const Color(0xFF00F5FF),
+          onTap: () => onSelect('study'),
+        ),
+        const SizedBox(width: 8),
+        FilterChipItem(
+          label: 'Mindset',
+          selected: current == 'mind',
+          color: const Color(0xFF9B5CFF),
+          onTap: () => onSelect('mind'),
+        ),
+        const SizedBox(width: 8),
+        FilterChipItem(
+          label: 'Zelfvertrouwen',
+          selected: current == 'confidence',
+          color: const Color(0xFFFF4B91),
+          onTap: () => onSelect('confidence'),
+        ),
+      ],
     );
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String text;
-  const _SectionTitle({required this.text});
+class FilterChipItem extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+
+  const FilterChipItem({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: TextStyle(
-        color: Colors.white.withOpacity(0.92),
-        fontSize: 13,
-        fontWeight: FontWeight.w800,
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color:
+                selected ? color.withOpacity(0.22) : const Color(0xFF141A2E),
+            border: Border.all(
+              color: selected ? color : Colors.white.withOpacity(0.15),
+              width: 1.2,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: selected
+                    ? color
+                    : Colors.white.withOpacity(0.85),
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-class _QuoteCardBody extends StatelessWidget {
+/* =======================
+   QUOTE CARD
+======================= */
+
+class QuoteCardBody extends StatelessWidget {
   final String text;
   final String author;
   final Color accent;
   final VoidCallback onCopy;
 
-  const _QuoteCardBody({
+  const QuoteCardBody({
+    super.key,
     required this.text,
     required this.author,
     required this.accent,
@@ -286,7 +334,7 @@ class _QuoteCardBody extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _NeonIconCircle(icon: Icons.bolt, glow: accent),
+        NeonIconCircle(icon: Icons.bolt, glow: accent),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -294,12 +342,19 @@ class _QuoteCardBody extends StatelessWidget {
             children: [
               Text(
                 '"$text"',
-                style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
                 author,
-                style: TextStyle(color: Colors.white.withOpacity(0.72), fontStyle: FontStyle.italic),
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.72),
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ],
           ),
@@ -313,12 +368,13 @@ class _QuoteCardBody extends StatelessWidget {
   }
 }
 
-class _MiniAction extends StatelessWidget {
+class MiniAction extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
 
-  const _MiniAction({
+  const MiniAction({
+    super.key,
     required this.icon,
     required this.label,
     required this.onTap,
@@ -340,9 +396,18 @@ class _MiniAction extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 18, color: Colors.white.withOpacity(0.85)),
+              Icon(icon,
+                  size: 18,
+                  color: Colors.white.withOpacity(0.85)),
               const SizedBox(width: 8),
-              Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ),
@@ -351,10 +416,15 @@ class _MiniAction extends StatelessWidget {
   }
 }
 
-class _NeonIconCircle extends StatelessWidget {
+class NeonIconCircle extends StatelessWidget {
   final IconData icon;
   final Color glow;
-  const _NeonIconCircle({required this.icon, required this.glow});
+
+  const NeonIconCircle({
+    super.key,
+    required this.icon,
+    required this.glow,
+  });
 
   @override
   Widget build(BuildContext context) {

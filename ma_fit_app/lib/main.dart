@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'core/app_state.dart';
 import 'core/auth_service.dart';
+import 'core/app_state.dart';
+
 import 'screens/auth/login_screen.dart';
-import 'screens/auth/welcome_screen.dart';
 import 'screens/home/home_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://pchuadpwsjjgmzibopxz.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjaHVhZHB3c2pqZ216aWJvcHh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4MDk4MDgsImV4cCI6MjA4MzM4NTgwOH0.D_UCUU0wdArh_gwkBF2J0quhOuSSBgQSqe5ltlUXgkI',
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.pkce,
+      autoRefreshToken: true,
+    ),
+  );
+
   runApp(const MyApp());
 }
 
@@ -17,50 +30,49 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const _Boot(),
+      home: const SessionGate(),
       routes: {
         '/login': (_) => const LoginScreen(),
-        '/welcome': (_) => const WelcomeScreen(),
         '/home': (_) => const HomeScreen(),
       },
     );
   }
 }
 
-class _Boot extends StatefulWidget {
-  const _Boot();
+class SessionGate extends StatefulWidget {
+  const SessionGate({super.key});
 
   @override
-  State<_Boot> createState() => _BootState();
+  State<SessionGate> createState() => _SessionGateState();
 }
 
-class _BootState extends State<_Boot> {
+class _SessionGateState extends State<SessionGate> {
+  bool loading = true;
+
   @override
   void initState() {
     super.initState();
-    _load();
+    _boot();
   }
 
-  Future<void> _load() async {
+  Future<void> _boot() async {
     final user = await AuthService.getSessionUser();
     AppState.currentUser = user;
 
     if (!mounted) return;
-
-    if (user == null) {
-      Navigator.pushReplacementNamed(context, '/login');
-    } else {
-      Navigator.pushReplacementNamed(context, '/home');
-    }
+    setState(() => loading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF050816),
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    if (loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return AppState.currentUser == null
+        ? const LoginScreen()
+        : const HomeScreen();
   }
 }
