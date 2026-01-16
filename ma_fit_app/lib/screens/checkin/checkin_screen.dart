@@ -197,13 +197,15 @@ class _CheckInScreenState extends State<CheckInScreen> {
                               : [],
                         ),
                         child: Center(
-                          child: Text(
-                            mood.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
+                         child: Text(
+  const ['😞', '😕', '😐', '🙂', '😄'][mood - 1],
+  style: const TextStyle(
+    fontSize: 22,
+    color: Colors.white,
+    fontWeight: FontWeight.w800,
+  ),
+),
+
                         ),
                       ),
                     );
